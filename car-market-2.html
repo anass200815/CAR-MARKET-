@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>سوق السيارات بالمغرب - Car Market Morocco</title>
+    <style>
+        :root {
+            --primary: #1e293b;
+            --accent: #2563eb;
+            --accent-hover: #1d4ed8;
+            --whatsapp: #25d366;
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --danger: #ef4444;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: var(--bg-color); color: var(--text-main); line-height: 1.6; }
+
+        header { background: var(--primary); color: #fff; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .logo { font-size: 1.5rem; font-weight: bold; display: flex; align-items: center; gap: 8px; }
+        .nav-btns { display: flex; gap: 15px; align-items: center; }
+        .btn-add { background: var(--accent); color: white; border: none; padding: 8px 16px; border-radius: 6px; font-weight: 600; cursor: pointer; transition: background 0.2s; }
+        .btn-add:hover { background: var(--accent-hover); }
+
+        .hero { background: linear-gradient(rgba(15,23,42,0.75), rgba(15,23,42,0.75)), url('https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=1400&q=80') center/cover; color: white; text-align: center; padding: 4rem 1.5rem; }
+        .hero h1 { font-size: 2.2rem; margin-bottom: 0.8rem; }
+        .hero p { color: #cbd5e1; font-size: 1.1rem; margin-bottom: 2rem; }
+
+        .search-container { background: white; padding: 1rem; max-width: 950px; margin: -30px auto 2rem; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)) auto; gap: 10px; align-items: center; position: relative; z-index: 10; }
+        .search-container input, .search-container select { padding: 10px 12px; border: 1px solid var(--border); border-radius: 6px; font-size: 0.95rem; outline: none; }
+        .search-btn { background: var(--accent); color: white; border: none; padding: 10px 15px; border-radius: 6px; font-weight: bold; cursor: pointer; transition: background 0.2s; }
+        .search-btn:hover { background: var(--accent-hover); }
+
+        .container { max-width: 1200px; margin: 2rem auto; padding: 0 1.5rem; }
+        .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 10px; }
+        .section-title { font-size: 1.4rem; display: flex; align-items: center; gap: 10px; color: var(--primary); }
+        .section-title::before { content: ''; width: 6px; height: 24px; background: var(--accent); border-radius: 3px; }
+
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
+        .card { background: var(--card-bg); border-radius: 10px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.04); border: 1px solid var(--border); transition: transform 0.2s, box-shadow 0.2s; display: flex; flex-direction: column; position: relative; }
+        .card:hover { transform: translateY(-4px); box-shadow: 0 10px 15px rgba(0,0,0,0.08); }
+
+        .card-img-wrapper { position: relative; width: 100%; height: 190px; background: #e2e8f0; }
+        .card img { width: 100%; height: 100%; object-fit: cover; }
+        .price-tag { position: absolute; bottom: 10px; right: 10px; background: rgba(15,23,42,0.85); color: #4ade80; padding: 4px 10px; border-radius: 6px; font-weight: bold; font-size: 1rem; backdrop-filter: blur(4px); }
+
+        .fav-btn { position: absolute; top: 10px; left: 10px; background: white; border: none; width: 35px; height: 35px; border-radius: 50%; display: flex; justify-content: center; align-items: center; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.2); font-size: 1.1rem; transition: transform 0.2s; }
+        .fav-btn:hover { transform: scale(1.1); }
+        .fav-btn.active { color: var(--danger); }
+
+        .card.sold .card-img-wrapper img { opacity: 0.5; filter: grayscale(40%); }
+        .sold-badge { position: absolute; top: 10px; right: 10px; background: var(--danger); color: white; padding: 4px 12px; border-radius: 6px; font-weight: bold; font-size: 0.85rem; z-index: 3; }
+        .img-nav { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(15,23,42,0.5); color: white; border: none; width: 28px; height: 28px; border-radius: 50%; cursor: pointer; font-size: 1.1rem; display: flex; align-items: center; justify-content: center; z-index: 2; line-height: 1; }
+        .img-nav-prev { left: 8px; }
+        .img-nav-next { right: 8px; }
+        .img-nav:hover { background: rgba(15,23,42,0.8); }
+        .img-dots { position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); display: flex; gap: 5px; z-index: 2; }
+        .img-dot { width: 7px; height: 7px; border-radius: 50%; background: rgba(255,255,255,0.6); cursor: pointer; border: none; padding: 0; }
+        .img-dot.active { background: white; }
+        .btn-sold { background: white; border: 1px solid var(--border); border-radius: 6px; padding: 9px 12px; cursor: pointer; font-size: 0.9rem; transition: background 0.2s; white-space: nowrap; }
+        .btn-sold:hover { background: #fee2e2; }
+        .sold-label { flex: 1; text-align: center; background: #94a3b8; color: white; padding: 9px; border-radius: 6px; font-weight: 600; font-size: 0.9rem; }
+
+        .card-body { padding: 1.2rem; display: flex; flex-direction: column; flex-grow: 1; }
+        .card-title { font-size: 1.15rem; font-weight: bold; margin-bottom: 0.5rem; color: var(--text-main); }
+        .card-specs { font-size: 0.9rem; color: var(--text-muted); margin-bottom: 0.8rem; display: flex; flex-wrap: wrap; gap: 8px; }
+        .spec-badge { background: #f1f5f9; padding: 3px 8px; border-radius: 4px; }
+        .card-desc { font-size: 0.88rem; color: #475569; margin-bottom: 1rem; background: #f8fafc; padding: 8px; border-radius: 6px; border-right: 3px solid var(--accent); }
+
+        .card-footer { margin-top: auto; display: flex; gap: 8px; align-items: center; }
+        .btn-whatsapp { flex: 1; text-align: center; background: var(--whatsapp); color: white; padding: 9px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 0.9rem; display: flex; justify-content: center; align-items: center; gap: 6px; transition: background 0.2s; }
+        .btn-whatsapp:hover { background: #16a34a; }
+
+        /* Modal */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); display: none; justify-content: center; align-items: center; z-index: 1000; padding: 1rem; }
+        .modal { background: white; width: 100%; max-width: 600px; border-radius: 12px; overflow: hidden; box-shadow: 0 20px 25px rgba(0,0,0,0.15); animation: scaleUp 0.3s ease; max-height: 90vh; display: flex; flex-direction: column; }
+        @keyframes scaleUp { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+        .modal-header { background: var(--primary); color: white; padding: 1rem 1.5rem; display: flex; justify-content: space-between; align-items: center; }
+        .close-modal { background: none; border: none; color: white; font-size: 1.5rem; cursor: pointer; }
+        .modal-body { padding: 1.5rem; overflow-y: auto; }
+
+        .form-group { margin-bottom: 1.2rem; }
+        .form-group label { display: block; margin-bottom: 6px; font-weight: 600; font-size: 0.9rem; color: var(--primary); }
+        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 6px; font-size: 0.95rem; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .submit-btn { width: 100%; background: var(--accent); color: white; border: none; padding: 12px; border-radius: 6px; font-size: 1rem; font-weight: bold; cursor: pointer; transition: background 0.2s; margin-top: 10px; }
+        .submit-btn:hover { background: var(--accent-hover); }
+        .submit-btn:disabled { background: #94a3b8; cursor: not-allowed; }
+
+        .empty-state { text-align: center; padding: 4rem 1rem; color: var(--text-muted); grid-column: 1 / -1; }
+        .empty-state h3 { font-size: 1.2rem; margin-bottom: 0.5rem; color: var(--primary); }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo">🚗 سوق السيارات المغربي</div>
+        <div class="nav-btns">
+            <button class="btn-add" type="button" onclick="openModal()">+ أضف سيارتك للبيع</button>
+        </div>
+    </header>
+
+    <div class="hero">
+        <h1>منصة الإعلانات المبوبة للسيارات في المغرب</h1>
+        <p>اعرض سيارتك للبيع مباشرة أو تواصل مع البائعين في جميع مدن المملكة</p>
+    </div>
+
+    <!-- Filter & Sort Bar -->
+    <div class="search-container">
+        <input type="text" id="searchKeyword" placeholder="ابحث بالماركة..." oninput="filterAndSortCars()">
+        <select id="filterCity" onchange="filterAndSortCars()">
+            <option value="">جميع المدن المغربية</option>
+            <option value="الدار البيضاء">الدار البيضاء</option>
+            <option value="الرباط">الرباط</option>
+            <option value="طنجة">طنجة</option>
+            <option value="مراكش">مراكش</option>
+            <option value="فاس">فاس</option>
+            <option value="أكادير">أكادير</option>
+            <option value="وجدة">وجدة</option>
+            <option value="مكناس">مكناس</option>
+            <option value="تطوان">تطوان</option>
+            <option value="سلا">سلا</option>
+            <option value="القنيطرة">القنيطرة</option>
+            <option value="آسفي">آسفي</option>
+            <option value="العرائش">العرائش</option>
+            <option value="بني ملال">بني ملال</option>
+            <option value="الناظور">الناظور</option>
+            <option value="العيون">العيون</option>
+            <option value="الداخلة">الداخلة</option>
+        </select>
+        <select id="filterFuel" onchange="filterAndSortCars()">
+            <option value="">نوع الوقود</option>
+            <option value="ديزل">ديزل</option>
+            <option value="بنزين">بنزين</option>
+            <option value="هجينة (Hybrid)">هجينة (Hybrid)</option>
+        </select>
+        <select id="sortBy" onchange="filterAndSortCars()">
+            <option value="newest">الترتيب: الأحدث</option>
+            <option value="price-asc">السعر: من الأرخص للأغلى</option>
+            <option value="price-desc">السعر: من الأغلى للأرخص</option>
+        </select>
+        <button class="search-btn" type="button" onclick="filterAndSortCars()">بحث</button>
+    </div>
+
+    <div class="container">
+        <div class="section-header">
+            <h2 class="section-title" id="sectionTitle">السيارات المعروضة حالياً</h2>
+            <button id="favFilterBtn" class="search-btn" type="button" style="background:#0f172a; font-size:0.85rem;" onclick="toggleFavFilter()">⭐ المفضلة المحفوظة</button>
+        </div>
+        <div id="carsGrid" class="grid">
+            <div class="empty-state"><h3>جارِ التحميل...</h3></div>
+        </div>
+    </div>
+
+    <!-- Add Car Modal -->
+    <div id="carModal" class="modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>إضافة سيارة جديدة للبيع</h3>
+                <button class="close-modal" type="button" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="carForm" onsubmit="handleFormSubmit(event)">
+                    <div class="form-group">
+                        <label>عنوان الإعلان (ماركة وموديل السيارة)</label>
+                        <input type="text" id="title" required placeholder="مثال: Dacia Duster Model 2022">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>السعر (بالدرهم)</label>
+                            <input type="number" id="price" required min="1" placeholder="140000">
+                        </div>
+                        <div class="form-group">
+                            <label>المدينة</label>
+                            <select id="city" required>
+                                <option value="الدار البيضاء">الدار البيضاء</option>
+                                <option value="الرباط">الرباط</option>
+                                <option value="طنجة">طنجة</option>
+                                <option value="مراكش">مراكش</option>
+                                <option value="فاس">فاس</option>
+                                <option value="أكادير">أكادير</option>
+                                <option value="وجدة">وجدة</option>
+                                <option value="مكناس">مكناس</option>
+                                <option value="تطوان">تطوان</option>
+                                <option value="سلا">سلا</option>
+                                <option value="القنيطرة">القنيطرة</option>
+                                <option value="آسفي">آسفي</option>
+                                <option value="العرائش">العرائش</option>
+                                <option value="بني ملال">بني ملال</option>
+                                <option value="الناظور">الناظور</option>
+                                <option value="العيون">العيون</option>
+                                <option value="الداخلة">الداخلة</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>سنة الصنع</label>
+                            <input type="number" id="year" required min="1970" max="2026" placeholder="2020">
+                        </div>
+                        <div class="form-group">
+                            <label>نوع الوقود</label>
+                            <select id="fuel" required>
+                                <option value="ديزل">ديزل</option>
+                                <option value="بنزين">بنزين</option>
+                                <option value="هجينة (Hybrid)">هجينة (Hybrid)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>صور السيارة (يمكنك اختيار عدة صور معاً، حتى 6 صور)</label>
+                        <input type="file" id="carImageFile" accept="image/*" multiple required style="padding: 7px; background: #f8fafc;">
+                    </div>
+                    <div class="form-group">
+                        <label>تفاصيل وصف إضافية حول السيارة (حالتها، الصيانة، الكيلومترات...)</label>
+                        <textarea id="description" rows="3" placeholder="اكتب تفاصيل أكثر لمساعدة المشترين على معرفة حالة السيارة..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>رقم الواتساب للتواصل (مثال: 212600000000)</label>
+                        <input type="text" id="phone" required placeholder="212600000000">
+                    </div>
+                    <div class="form-group">
+                        <label>رمز سري خاص بك (4 أرقام أو أكثر) — احتفظ به جيداً، ستحتاجه لاحقاً لوسم السيارة كـ "تم البيع"</label>
+                        <input type="text" id="sellerCode" required minlength="4" placeholder="مثال: 4821">
+                    </div>
+                    <button type="submit" id="submitBtn" class="submit-btn">نشر الإعلان فوراً</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK (نظام قاعدة البيانات المشتركة) -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+
+    <script>
+        // ملاحظة: قائمة السيارات دابا مخزنة في Firebase (قاعدة بيانات سحابية مشتركة)،
+        // فيراها جميع زوار الموقع مهما كان جهازهم أو متصفحهم. "المفضلة" فقط تبقى محفوظة محلياً وخاصة بكل زائر.
+        const firebaseConfig = {
+            apiKey: "AIzaSyBz6Gdw4_HurmH80AKS-tMn0YsDy1lDouY",
+            authDomain: "car-market-2620b.firebaseapp.com",
+            databaseURL: "https://car-market-2620b-default-rtdb.firebaseio.com",
+            projectId: "car-market-2620b",
+            storageBucket: "car-market-2620b.firebasestorage.app",
+            messagingSenderId: "473369264244",
+            appId: "1:473369264244:web:e087586b60f65e9b0e5121"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const carsRef = firebase.database().ref('cars');
+
+        // تسجيل دخول صامت (بلا أي واجهة) لكل زائر، باش نعرفو من صاحب كل إعلان
+        // ونمنعو أي زائر آخر من تعديل أو حذف إعلان ماشي ديالو
+        let currentUserId = null;
+        function ensureAuth() {
+            return new Promise((resolve) => {
+                firebase.auth().onAuthStateChanged((user) => {
+                    if (user) {
+                        currentUserId = user.uid;
+                        resolve(user.uid);
+                    }
+                });
+                firebase.auth().signInAnonymously().catch((err) => {
+                    console.error('فشل تسجيل الدخول', err);
+                });
+            });
+        }
+        ensureAuth();
+
+        let cars = [];
+        let favorites = [];
+        let showOnlyFavs = false;
+        let imageIndexes = {}; // يتتبع أي صورة بادية حالياً لكل سيارة (مؤقت، ماكيتحفظش)
+
+        async function loadData() {
+            try {
+                const storedFavs = localStorage.getItem('morocco_favs');
+                favorites = storedFavs ? JSON.parse(storedFavs) : [];
+            } catch (e) {
+                favorites = [];
+            }
+
+            // استماع مباشر لأي تغيير في قاعدة البيانات: أي سيارة يزيدها أي زائر تبان عند الجميع تلقائياً
+            carsRef.on('value', (snapshot) => {
+                const data = snapshot.val();
+                cars = data ? Object.values(data) : [];
+                cars.sort((a, b) => b.id - a.id); // الأحدث أولاً
+                filterAndSortCars();
+            }, (error) => {
+                console.error('فشل تحميل السيارات', error);
+                cars = [];
+                filterAndSortCars();
+            });
+        }
+
+        function saveFavorites() {
+            try {
+                localStorage.setItem('morocco_favs', JSON.stringify(favorites));
+            } catch (e) {
+                console.error('فشل حفظ المفضلة', e);
+            }
+        }
+
+        function readFileAsDataURL(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (e) => resolve(e.target.result);
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
+        }
+
+        async function hashCode(code) {
+            const enc = new TextEncoder().encode(code);
+            const buf = await crypto.subtle.digest('SHA-256', enc);
+            return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+
+        // تصغير وضغط أي صورة (كيفما كان حجمها الأصلي) قبل حفظها، لتفادي مشاكل سعة التخزين
+        function compressImage(file, maxDim = 1280, quality = 0.75) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        let { width, height } = img;
+                        if (width > maxDim || height > maxDim) {
+                            if (width > height) {
+                                height = Math.round(height * (maxDim / width));
+                                width = maxDim;
+                            } else {
+                                width = Math.round(width * (maxDim / height));
+                                height = maxDim;
+                            }
+                        }
+                        const canvas = document.createElement('canvas');
+                        canvas.width = width;
+                        canvas.height = height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+                        resolve(canvas.toDataURL('image/jpeg', quality));
+                    };
+                    img.onerror = () => reject(new Error('تعذّر فتح الصورة'));
+                    img.src = e.target.result;
+                };
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function openModal() {
+            document.getElementById('carModal').style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('carModal').style.display = 'none';
+        }
+
+        async function toggleFav(id, event) {
+            event.stopPropagation();
+            if (favorites.includes(id)) {
+                favorites = favorites.filter(favId => favId !== id);
+            } else {
+                favorites.push(id);
+            }
+            await saveFavorites();
+            filterAndSortCars();
+        }
+
+        async function markSold(carId, event) {
+            event.stopPropagation();
+            const car = cars.find(c => c.id === carId);
+            if (!car) return;
+            const code = prompt('أدخل الرمز السري الذي وضعته عند نشر الإعلان لتأكيد أن السيارة تم بيعها:');
+            if (code === null) return;
+            const hash = await hashCode(code);
+            if (hash !== car.sellerCodeHash) {
+                alert('الرمز السري غير صحيح.');
+                return;
+            }
+            try {
+                await ensureAuth();
+                await carsRef.child(String(carId)).update({ sold: true });
+            } catch (e) {
+                alert('حدث خطأ أثناء الحفظ. تأكد من اتصالك بالإنترنت وحاول مرة أخرى.');
+            }
+        }
+
+        function changeImage(carId, direction, event) {
+            event.stopPropagation();
+            const car = cars.find(c => c.id === carId);
+            const images = car && car.images ? car.images : [];
+            if (images.length <= 1) return;
+            let idx = imageIndexes[carId] || 0;
+            idx = (idx + direction + images.length) % images.length;
+            imageIndexes[carId] = idx;
+            const imgEl = document.getElementById('img-' + carId);
+            if (imgEl) imgEl.src = images[idx];
+            document.querySelectorAll('.dot-' + carId).forEach((dot, i) => {
+                dot.classList.toggle('active', i === idx);
+            });
+        }
+
+        function setImage(carId, idx, event) {
+            event.stopPropagation();
+            const car = cars.find(c => c.id === carId);
+            if (!car || !car.images) return;
+            imageIndexes[carId] = idx;
+            const imgEl = document.getElementById('img-' + carId);
+            if (imgEl) imgEl.src = car.images[idx];
+            document.querySelectorAll('.dot-' + carId).forEach((dot, i) => {
+                dot.classList.toggle('active', i === idx);
+            });
+        }
+
+        function toggleFavFilter() {
+            showOnlyFavs = !showOnlyFavs;
+            const btn = document.getElementById('favFilterBtn');
+            const title = document.getElementById('sectionTitle');
+            if (showOnlyFavs) {
+                btn.style.background = '#2563eb';
+                title.innerText = "السيارات المفضلة المحفوظة";
+            } else {
+                btn.style.background = '#0f172a';
+                title.innerText = "السيارات المعروضة حالياً";
+            }
+            filterAndSortCars();
+        }
+
+        function renderCars(dataToRender) {
+            const grid = document.getElementById('carsGrid');
+            if (dataToRender.length === 0) {
+                grid.innerHTML = `
+                    <div class="empty-state">
+                        <h3>لا توجد أي سيارات مطابقة</h3>
+                        <p>جرّب تعديل معايير البحث، أو كن أول من يضيف سيارته للبيع عبر الضغط على زر "+ أضف سيارتك للبيع"</p>
+                    </div>
+                `;
+                return;
+            }
+
+            grid.innerHTML = dataToRender.map(car => {
+                const isFav = favorites.includes(car.id);
+                const images = (car.images && car.images.length) ? car.images : (car.image ? [car.image] : []);
+                const startIdx = imageIndexes[car.id] || 0;
+                const hasMultiple = images.length > 1;
+                const dots = hasMultiple ? images.map((_, i) =>
+                    `<button class="img-dot dot-${car.id} ${i === startIdx ? 'active' : ''}" onclick="setImage(${car.id}, ${i}, event)"></button>`
+                ).join('') : '';
+
+                return `
+                    <div class="card ${car.sold ? 'sold' : ''}">
+                        <div class="card-img-wrapper">
+                            <img id="img-${car.id}" src="${images[startIdx] || ''}" alt="${car.title}">
+                            ${car.sold ? '<div class="sold-badge">تم البيع</div>' : ''}
+                            ${hasMultiple ? `
+                                <button class="img-nav img-nav-prev" onclick="changeImage(${car.id}, -1, event)">‹</button>
+                                <button class="img-nav img-nav-next" onclick="changeImage(${car.id}, 1, event)">›</button>
+                                <div class="img-dots">${dots}</div>
+                            ` : ''}
+                            <button class="fav-btn ${isFav ? 'active' : ''}" onclick="toggleFav(${car.id}, event)" title="حفظ في المفضلة">
+                                ${isFav ? '❤️' : '🤍'}
+                            </button>
+                            <div class="price-tag">${car.price} د.م</div>
+                        </div>
+                        <div class="card-body">
+                            <h3 class="card-title">${car.title}</h3>
+                            <div class="card-specs">
+                                <span class="spec-badge">📍 ${car.city}</span>
+                                <span class="spec-badge">📅 ${car.year}</span>
+                                <span class="spec-badge">⚙️ ${car.fuel}</span>
+                            </div>
+                            ${car.description ? `<div class="card-desc">📝 ${car.description}</div>` : ''}
+                            <div class="card-footer">
+                                ${car.sold ? `
+                                    <span class="sold-label">تم بيع هذه السيارة</span>
+                                ` : `
+                                    <a href="https://wa.me/${car.phone}?text=${encodeURIComponent('السلام عليكم، أنا مهتم بسيارتك ' + car.title + ' المعروضة على المنصة.')}" class="btn-whatsapp" target="_blank">
+                                        💬 تواصل عبر الواتساب
+                                    </a>
+                                    <button class="btn-sold" onclick="markSold(${car.id}, event)" title="وسم السيارة كمباعة">🔴 تم البيع</button>
+                                `}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        async function handleFormSubmit(e) {
+            e.preventDefault();
+            const rawPriceVal = Number(document.getElementById('price').value);
+            const imageFiles = Array.from(document.getElementById('carImageFile').files);
+            const sellerCode = document.getElementById('sellerCode').value;
+            const submitBtn = document.getElementById('submitBtn');
+
+            if (imageFiles.length === 0) {
+                alert('الرجاء اختيار صورة واحدة على الأقل.');
+                return;
+            }
+            if (imageFiles.length > 6) {
+                alert('يمكنك اختيار 6 صور كحد أقصى لكل إعلان.');
+                return;
+            }
+            if (sellerCode.length < 4) {
+                alert('الرجاء إدخال رمز سري من 4 أرقام أو أكثر.');
+                return;
+            }
+
+            submitBtn.disabled = true;
+            submitBtn.innerText = 'جارٍ النشر...';
+
+            try {
+                const ownerId = await ensureAuth();
+                const images = await Promise.all(imageFiles.map(f => compressImage(f)));
+                const sellerCodeHash = await hashCode(sellerCode);
+
+                const newCar = {
+                    id: Date.now(),
+                    ownerId: ownerId,
+                    title: document.getElementById('title').value,
+                    rawPrice: rawPriceVal,
+                    price: rawPriceVal.toLocaleString(),
+                    city: document.getElementById('city').value,
+                    year: document.getElementById('year').value,
+                    fuel: document.getElementById('fuel').value,
+                    images: images,
+                    description: document.getElementById('description').value,
+                    phone: document.getElementById('phone').value,
+                    sellerCodeHash: sellerCodeHash,
+                    sold: false
+                };
+
+                cars.unshift(newCar);
+                try {
+                    await carsRef.child(String(newCar.id)).set(newCar);
+                    filterAndSortCars();
+                    closeModal();
+                    document.getElementById('carForm').reset();
+                    alert('تم نشر إعلانك بنجاح وأصبح ظاهراً لجميع الزوار!');
+                } catch (saveErr) {
+                    cars.shift();
+                    alert('حدث خطأ أثناء نشر الإعلان. تأكد من اتصالك بالإنترنت وحاول مرة أخرى.');
+                }
+            } catch (err) {
+                alert('تعذّرت معالجة الصور. تأكد أنها ملفات صور صالحة (jpg, png...) وحاول مرة أخرى.');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerText = 'نشر الإعلان فوراً';
+            }
+        }
+
+        function filterAndSortCars() {
+            const keyword = document.getElementById('searchKeyword').value.toLowerCase();
+            const city = document.getElementById('filterCity').value;
+            const fuel = document.getElementById('filterFuel').value;
+            const sortBy = document.getElementById('sortBy').value;
+
+            let result = cars.filter(car => {
+                const matchKeyword = car.title.toLowerCase().includes(keyword);
+                const matchCity = city === "" || car.city === city;
+                const matchFuel = fuel === "" || car.fuel === fuel;
+                const matchFav = !showOnlyFavs || favorites.includes(car.id);
+                return matchKeyword && matchCity && matchFuel && matchFav;
+            });
+
+            if (sortBy === 'price-asc') {
+                result.sort((a, b) => a.rawPrice - b.rawPrice);
+            } else if (sortBy === 'price-desc') {
+                result.sort((a, b) => b.rawPrice - a.rawPrice);
+            }
+            // "الأحدث" (newest) تبقى بترتيب المصفوفة الأصلي لأن السيارات الجديدة تُضاف في البداية
+
+            renderCars(result);
+        }
+
+        document.addEventListener('DOMContentLoaded', loadData);
+    </script>
+</body>
+</html>
