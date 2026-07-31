@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مقال - سوق السيارات المغربي</title>
+    <style>
+        :root {
+            --primary: #1e293b;
+            --accent: #2563eb;
+            --bg-color: #f8fafc;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background: var(--bg-color); color: var(--text-main); line-height: 1.8; }
+        header { background: var(--primary); color: white; padding: 1rem 1.5rem; }
+        header a { color: white; text-decoration: none; font-weight: 600; }
+        .wrap { max-width: 720px; margin: 0 auto; padding: 1.5rem; }
+        .cover { width: 100%; max-height: 320px; object-fit: cover; border-radius: 10px; margin-bottom: 1.5rem; background: #e2e8f0; }
+        h1 { font-size: 1.6rem; margin-bottom: 0.5rem; color: var(--primary); }
+        .meta { color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1.5rem; }
+        .content { background: white; border: 1px solid var(--border); border-radius: 10px; padding: 1.5rem; }
+        .content h2 { margin: 1rem 0 0.5rem; font-size: 1.2rem; }
+        .content p { margin-bottom: 1rem; }
+        .content ul, .content ol { margin: 0 1.5rem 1rem; }
+        .content img { max-width: 100%; border-radius: 8px; margin: 1rem 0; }
+        .loading, .not-found { text-align: center; padding: 3rem 1rem; color: var(--text-muted); }
+    </style>
+</head>
+<body>
+    <header><a href="index.html">← رجوع لسوق السيارات</a></header>
+    <div class="wrap" id="content">
+        <div class="loading">جارِ التحميل...</div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyBz6Gdw4_HurmH80AKS-tMn0YsDy1lDouY",
+            authDomain: "car-market-2620b.firebaseapp.com",
+            databaseURL: "https://car-market-2620b-default-rtdb.firebaseio.com",
+            projectId: "car-market-2620b",
+            storageBucket: "car-market-2620b.firebasestorage.app",
+            messagingSenderId: "473369264244",
+            appId: "1:473369264244:web:e087586b60f65e9b0e5121"
+        };
+        firebase.initializeApp(firebaseConfig);
+
+        const params = new URLSearchParams(window.location.search);
+        const articleId = params.get('id');
+        const contentEl = document.getElementById('content');
+
+        if (!articleId) {
+            contentEl.innerHTML = '<div class="not-found">المقال غير موجود.</div>';
+        } else {
+            firebase.database().ref('articles/' + articleId).once('value').then((snap) => {
+                const article = snap.val();
+                if (!article) {
+                    contentEl.innerHTML = '<div class="not-found">هذا المقال غير موجود أو تم حذفه.</div>';
+                    return;
+                }
+                document.title = article.title + ' - سوق السيارات المغربي';
+                contentEl.innerHTML = `
+                    ${article.coverImage ? `<img class="cover" src="${article.coverImage}" alt="${article.title}">` : ''}
+                    <h1>${article.title}</h1>
+                    <div class="meta">${new Date(article.createdAt).toLocaleDateString('ar-MA')}</div>
+                    <div class="content">${article.body || ''}</div>
+                `;
+            }).catch(() => {
+                contentEl.innerHTML = '<div class="not-found">حدث خطأ أثناء تحميل المقال.</div>';
+            });
+        }
+    </script>
+</body>
+</html>
