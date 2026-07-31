@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة تحكم الأدمين - سوق السيارات</title>
+    <style>
+        :root {
+            --primary: #1e293b;
+            --accent: #2563eb;
+            --accent-hover: #1d4ed8;
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --danger: #ef4444;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: var(--bg-color); color: var(--text-main); line-height: 1.6; min-height: 100vh; }
+
+        header { background: var(--primary); color: #fff; padding: 1rem 1.5rem; display: flex; justify-content: space-between; align-items: center; }
+        header h1 { font-size: 1.2rem; }
+        .btn-logout { background: var(--danger); color: white; border: none; padding: 8px 14px; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 0.85rem; }
+
+        /* شاشة تسجيل الدخول */
+        .login-screen { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 1.5rem; }
+        .login-box { background: white; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); padding: 2rem 1.5rem; width: 100%; max-width: 400px; }
+        .login-box h2 { text-align: center; margin-bottom: 1.5rem; color: var(--primary); }
+        .form-group { margin-bottom: 1rem; }
+        .form-group label { display: block; margin-bottom: 6px; font-weight: 600; font-size: 0.9rem; }
+        .form-group input { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 6px; font-size: 0.95rem; }
+        .btn-login { width: 100%; background: var(--accent); color: white; border: none; padding: 12px; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 8px; }
+        .btn-login:disabled { background: #94a3b8; cursor: not-allowed; }
+        .login-error { color: var(--danger); font-size: 0.85rem; margin-top: 10px; text-align: center; display: none; }
+
+        /* لوحة التحكم */
+        .dashboard { display: none; max-width: 1000px; margin: 0 auto; padding: 1.5rem; }
+        .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 1.5rem; }
+        .stat-card { background: white; border-radius: 10px; padding: 1rem; text-align: center; border: 1px solid var(--border); }
+        .stat-card .num { font-size: 1.6rem; font-weight: bold; color: var(--accent); }
+        .stat-card .label { font-size: 0.8rem; color: var(--text-muted); }
+
+        .car-row { background: white; border-radius: 10px; border: 1px solid var(--border); padding: 1rem; margin-bottom: 10px; display: flex; gap: 12px; align-items: center; }
+        .car-row img { width: 70px; height: 70px; object-fit: cover; border-radius: 8px; flex-shrink: 0; background: #e2e8f0; }
+        .car-row .info { flex-grow: 1; min-width: 0; }
+        .car-row .info h4 { font-size: 1rem; margin-bottom: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .car-row .info .meta { font-size: 0.8rem; color: var(--text-muted); }
+        .car-row .actions { display: flex; flex-direction: column; gap: 6px; flex-shrink: 0; }
+        .btn-mini { border: none; border-radius: 6px; padding: 6px 10px; font-size: 0.78rem; cursor: pointer; white-space: nowrap; }
+        .btn-mini-delete { background: #fee2e2; color: var(--danger); }
+        .btn-mini-block { background: #fef3c7; color: #92400e; }
+        .sold-tag { display: inline-block; background: #94a3b8; color: white; font-size: 0.7rem; padding: 2px 8px; border-radius: 10px; margin-right: 6px; }
+
+        .empty-state { text-align: center; padding: 3rem 1rem; color: var(--text-muted); }
+        .loading { text-align: center; padding: 2rem; color: var(--text-muted); }
+
+        .tabs { display: flex; gap: 8px; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border); }
+        .tab-btn { background: none; border: none; padding: 10px 16px; font-size: 0.95rem; cursor: pointer; color: var(--text-muted); border-bottom: 3px solid transparent; }
+        .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 600; }
+        .tab-panel { display: none; }
+        .tab-panel.active { display: block; }
+
+        .btn-primary { background: var(--accent); color: white; border: none; padding: 10px 18px; border-radius: 6px; font-weight: 600; cursor: pointer; margin-bottom: 1rem; }
+        .article-form { background: white; border: 1px solid var(--border); border-radius: 10px; padding: 1.2rem; margin-bottom: 1.5rem; display: none; }
+        .article-form .form-group { margin-bottom: 1rem; }
+        .article-form label { display: block; margin-bottom: 6px; font-weight: 600; font-size: 0.9rem; }
+        .article-form input[type=text], .article-form textarea { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 6px; font-size: 0.95rem; }
+        #editor { height: 220px; background: white; margin-bottom: 40px; }
+        .article-item { background: white; border: 1px solid var(--border); border-radius: 10px; padding: 1rem; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+        .article-item h4 { font-size: 0.95rem; }
+        .article-item .meta { font-size: 0.78rem; color: var(--text-muted); }
+
+        .blocked-form { display: flex; gap: 8px; margin-bottom: 1.2rem; }
+        .blocked-form input { flex: 1; padding: 10px 12px; border: 1px solid var(--border); border-radius: 6px; }
+        .blocked-item { background: white; border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
+    </style>
+    <link href="https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.snow.css" rel="stylesheet">
+</head>
+<body>
+
+    <!-- شاشة تسجيل الدخول -->
+    <div class="login-screen" id="loginScreen">
+        <div class="login-box">
+            <h2>🔐 لوحة تحكم الأدمين</h2>
+            <form id="loginForm" onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label>البريد الإلكتروني</label>
+                    <input type="email" id="loginEmail" required autocomplete="username">
+                </div>
+                <div class="form-group">
+                    <label>كلمة السر</label>
+                    <input type="password" id="loginPassword" required autocomplete="current-password">
+                </div>
+                <button type="submit" id="loginBtn" class="btn-login">دخول</button>
+                <p class="login-error" id="loginError"></p>
+            </form>
+        </div>
+    </div>
+
+    <!-- لوحة التحكم -->
+    <div id="dashboard" class="dashboard">
+        <header style="margin: -1.5rem -1.5rem 1.5rem -1.5rem;">
+            <h1>لوحة تحكم الأدمين</h1>
+            <button class="btn-logout" onclick="handleLogout()">خروج</button>
+        </header>
+
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('cars', event)">الإعلانات</button>
+            <button class="tab-btn" onclick="switchTab('articles', event)">المقالات</button>
+            <button class="tab-btn" onclick="switchTab('blocked', event)">الأرقام المحظورة</button>
+        </div>
+
+        <!-- تبويب الإعلانات -->
+        <div id="tabCars" class="tab-panel active">
+            <div class="stats-row">
+                <div class="stat-card">
+                    <div class="num" id="statTotal">-</div>
+                    <div class="label">إجمالي الإعلانات</div>
+                </div>
+                <div class="stat-card">
+                    <div class="num" id="statActive">-</div>
+                    <div class="label">نشطة</div>
+                </div>
+                <div class="stat-card">
+                    <div class="num" id="statSold">-</div>
+                    <div class="label">مباعة</div>
+                </div>
+            </div>
+
+            <div id="carsList">
+                <div class="loading">جارِ التحميل...</div>
+            </div>
+        </div>
+
+        <!-- تبويب المقالات -->
+        <div id="tabArticles" class="tab-panel">
+            <button class="btn-primary" onclick="openArticleForm()">+ مقال جديد</button>
+            <div class="article-form" id="articleForm">
+                <div class="form-group">
+                    <label>عنوان المقال</label>
+                    <input type="text" id="articleTitle">
+                </div>
+                <div class="form-group">
+                    <label>نبذة قصيرة (تبان في البطاقة)</label>
+                    <textarea id="articleExcerpt" rows="2"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>صورة الغلاف</label>
+                    <input type="file" id="articleCoverFile" accept="image/*">
+                </div>
+                <div class="form-group">
+                    <label>محتوى المقال</label>
+                    <div id="editor"></div>
+                </div>
+                <button class="btn-primary" onclick="saveArticle()">نشر المقال</button>
+                <button class="btn-primary" style="background:#94a3b8;" onclick="closeArticleForm()">إلغاء</button>
+            </div>
+            <div id="articlesList"></div>
+        </div>
+
+        <!-- تبويب الأرقام المحظورة -->
+        <div id="tabBlocked" class="tab-panel">
+            <div class="blocked-form">
+                <input type="text" id="blockPhoneInput" placeholder="مثال: 212600000000">
+                <button class="btn-primary" style="margin:0;" onclick="addBlockedPhone()">حظر</button>
+            </div>
+            <div id="blockedList"></div>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.min.js"></script>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyBz6Gdw4_HurmH80AKS-tMn0YsDy1lDouY",
+            authDomain: "car-market-2620b.firebaseapp.com",
+            databaseURL: "https://car-market-2620b-default-rtdb.firebaseio.com",
+            projectId: "car-market-2620b",
+            storageBucket: "car-market-2620b.firebasestorage.app",
+            messagingSenderId: "473369264244",
+            appId: "1:473369264244:web:e087586b60f65e9b0e5121"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const carsRef = firebase.database().ref('cars');
+        const articlesRef = firebase.database().ref('articles');
+        const blockedRef = firebase.database().ref('blockedPhones');
+
+        // معرف حساب الأدمين الوحيد المسموح له بدخول هذه اللوحة
+        const ADMIN_UID = '0fcGNWpgkRhNM1WrUwClE27YvL42';
+
+        let quill = null;
+        let editingArticleId = null;
+
+        function switchTab(name, evt) {
+            document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById('tab' + name.charAt(0).toUpperCase() + name.slice(1)).classList.add('active');
+            if (evt && evt.target) evt.target.classList.add('active');
+        }
+
+        function compressImage(file, maxDim = 1000, quality = 0.75) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        let { width, height } = img;
+                        if (width > maxDim || height > maxDim) {
+                            if (width > height) { height = Math.round(height * (maxDim / width)); width = maxDim; }
+                            else { width = Math.round(width * (maxDim / height)); height = maxDim; }
+                        }
+                        const canvas = document.createElement('canvas');
+                        canvas.width = width; canvas.height = height;
+                        canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+                        resolve(canvas.toDataURL('image/jpeg', quality));
+                    };
+                    img.onerror = () => reject(new Error('تعذر فتح الصورة'));
+                    img.src = e.target.result;
+                };
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function openArticleForm() {
+            editingArticleId = null;
+            document.getElementById('articleTitle').value = '';
+            document.getElementById('articleExcerpt').value = '';
+            document.getElementById('articleCoverFile').value = '';
+            document.getElementById('articleForm').style.display = 'block';
+            if (!quill) {
+                quill = new Quill('#editor', { theme: 'snow' });
+            } else {
+                quill.setContents([]);
+            }
+        }
+
+        function closeArticleForm() {
+            document.getElementById('articleForm').style.display = 'none';
+        }
+
+        async function saveArticle() {
+            const title = document.getElementById('articleTitle').value.trim();
+            const excerpt = document.getElementById('articleExcerpt').value.trim();
+            const coverFile = document.getElementById('articleCoverFile').files[0];
+            const body = quill.root.innerHTML;
+            if (!title) { alert('الرجاء إدخال عنوان للمقال.'); return; }
+            try {
+                let coverImage = null;
+                if (coverFile) coverImage = await compressImage(coverFile);
+                const id = editingArticleId || Date.now();
+                const article = { id, title, excerpt, body, coverImage, createdAt: editingArticleId ? undefined : Date.now() };
+                if (editingArticleId) {
+                    await articlesRef.child(String(id)).update({ title, excerpt, body, ...(coverImage ? { coverImage } : {}) });
+                } else {
+                    await articlesRef.child(String(id)).set(article);
+                }
+                closeArticleForm();
+                alert('تم حفظ المقال بنجاح.');
+            } catch (err) {
+                alert('حدث خطأ أثناء حفظ المقال.');
+            }
+        }
+
+        function loadArticles() {
+            articlesRef.on('value', (snapshot) => {
+                const data = snapshot.val();
+                const articles = data ? Object.values(data) : [];
+                articles.sort((a, b) => b.createdAt - a.createdAt);
+                const list = document.getElementById('articlesList');
+                if (articles.length === 0) {
+                    list.innerHTML = '<div class="empty-state">لا توجد مقالات بعد</div>';
+                    return;
+                }
+                list.innerHTML = articles.map(a => `
+                    <div class="article-item">
+                        <div>
+                            <h4>${a.title}</h4>
+                            <div class="meta">${new Date(a.createdAt).toLocaleDateString('ar-MA')}</div>
+                        </div>
+                        <button class="btn-mini btn-mini-delete" onclick="deleteArticle(${a.id})">🗑️ حذف</button>
+                    </div>
+                `).join('');
+            });
+        }
+
+        async function deleteArticle(id) {
+            if (!confirm('متأكد بغيتي تمسح هذا المقال؟')) return;
+            await articlesRef.child(String(id)).remove();
+        }
+
+        function loadBlockedPhones() {
+            blockedRef.on('value', (snapshot) => {
+                const data = snapshot.val();
+                const phones = data ? Object.keys(data) : [];
+                const list = document.getElementById('blockedList');
+                if (phones.length === 0) {
+                    list.innerHTML = '<div class="empty-state">لا توجد أرقام محظورة</div>';
+                    return;
+                }
+                list.innerHTML = phones.map(p => `
+                    <div class="blocked-item">
+                        <span>${p}</span>
+                        <button class="btn-mini btn-mini-delete" onclick="removeBlockedPhone('${p}')">إلغاء الحظر</button>
+                    </div>
+                `).join('');
+            });
+        }
+
+        async function addBlockedPhone() {
+            const input = document.getElementById('blockPhoneInput');
+            const phone = input.value.trim();
+            if (!phone) return;
+            await blockedRef.child(phone).set(true);
+            input.value = '';
+        }
+
+        async function removeBlockedPhone(phone) {
+            await blockedRef.child(phone).remove();
+        }
+
+        const loginScreen = document.getElementById('loginScreen');
+        const dashboard = document.getElementById('dashboard');
+        const loginError = document.getElementById('loginError');
+        let allCars = [];
+
+        firebase.auth().onAuthStateChanged((user) => {
+            if (user && user.uid === ADMIN_UID) {
+                loginScreen.style.display = 'none';
+                dashboard.style.display = 'block';
+                loadAllCars();
+                loadArticles();
+                loadBlockedPhones();
+            } else if (user && user.uid !== ADMIN_UID) {
+                // حساب متصل لكن ماشي الأدمين المصرح له
+                firebase.auth().signOut();
+                showLoginError('هذا الحساب غير مخول للدخول إلى لوحة التحكم.');
+            } else {
+                loginScreen.style.display = 'flex';
+                dashboard.style.display = 'none';
+            }
+        });
+
+        function showLoginError(msg) {
+            loginError.textContent = msg;
+            loginError.style.display = 'block';
+        }
+
+        async function handleLogin(e) {
+            e.preventDefault();
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            const btn = document.getElementById('loginBtn');
+            loginError.style.display = 'none';
+            btn.disabled = true;
+            btn.textContent = 'جارِ الدخول...';
+            try {
+                await firebase.auth().signInWithEmailAndPassword(email, password);
+            } catch (err) {
+                showLoginError('البريد الإلكتروني أو كلمة السر غير صحيحة.');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'دخول';
+            }
+        }
+
+        function handleLogout() {
+            firebase.auth().signOut();
+        }
+
+        function loadAllCars() {
+            carsRef.on('value', (snapshot) => {
+                const data = snapshot.val();
+                allCars = data ? Object.values(data) : [];
+                allCars.sort((a, b) => b.id - a.id);
+                renderStats();
+                renderCarsList();
+            });
+        }
+
+        function renderStats() {
+            document.getElementById('statTotal').textContent = allCars.length;
+            document.getElementById('statActive').textContent = allCars.filter(c => !c.sold).length;
+            document.getElementById('statSold').textContent = allCars.filter(c => c.sold).length;
+        }
+
+        function renderCarsList() {
+            const container = document.getElementById('carsList');
+            if (allCars.length === 0) {
+                container.innerHTML = '<div class="empty-state">لا توجد أي إعلانات حالياً</div>';
+                return;
+            }
+            container.innerHTML = allCars.map(car => {
+                const images = (car.images && car.images.length) ? car.images : (car.image ? [car.image] : []);
+                const thumb = images[0] || '';
+                return `
+                    <div class="car-row">
+                        <img src="${thumb}" alt="${car.title || ''}">
+                        <div class="info">
+                            <h4>${car.sold ? '<span class="sold-tag">مباعة</span>' : ''}${escapeHtml(car.title || 'بدون عنوان')}</h4>
+                            <div class="meta">${escapeHtml(car.city || '')} · ${escapeHtml(car.price || '')} د.م · هاتف: ${escapeHtml(car.phone || '')}</div>
+                        </div>
+                        <div class="actions">
+                            <button class="btn-mini btn-mini-delete" onclick="adminDeleteCar(${car.id})">🗑️ حذف نهائي</button>
+                            <button class="btn-mini btn-mini-block" onclick="adminBlockPhone('${escapeHtml(car.phone || '')}')">🚫 حظر الرقم</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function escapeHtml(str) {
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+
+        async function adminDeleteCar(carId) {
+            if (!confirm('متأكد بغيتي تمسح هاد الإعلان نهائياً؟ هاد الإجراء ما يمكنش نرجعو فيه.')) return;
+            try {
+                await carsRef.child(String(carId)).remove();
+            } catch (err) {
+                alert('حدث خطأ أثناء الحذف. حاول مرة أخرى.');
+            }
+        }
+
+        async function adminBlockPhone(phone) {
+            if (!phone) { alert('لا يوجد رقم هاتف لهذا الإعلان.'); return; }
+            if (!confirm('متأكد بغيتي تحظر الرقم ' + phone + ' من النشر مستقبلاً؟')) return;
+            await blockedRef.child(phone).set(true);
+            alert('تم حظر الرقم بنجاح.');
+        }
+    </script>
+</body>
+</html>
